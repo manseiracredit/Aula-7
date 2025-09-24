@@ -50,7 +50,13 @@ import seaborn as sns
 
 sns.countplot(data=df, x='Churn')
 
-"""### Pergunta para Reflexão:
+"""## Interpretação do gráfico acima
+
+O gráfico acima nos mostra que a quantidade de clientes fiéis é mais que o dobro da quantidade de clientes que deram churn.
+
+---
+
+### Pergunta para Reflexão:
 - As classes estão balanceadas? Se um grupo é muito menor que o outro, que desafios isso pode trazer para o nosso modelo?
 
 **Resp.:** Não estão balanceadas, o gráfico nos indica que a quantidade de negativos na métrica alvo "Churn" é mais que o dobro da quantidade de positivos.
@@ -63,11 +69,30 @@ Isso pode desencadear em um algorítimo de predição que é melhor em prever ne
 
 sns.countplot(x='Contract', hue='Churn', data=df)
 
+"""## Interpretação do gráfico acima
+
+O gráfico acima nos mostra uma correlação extremamente clara entre tempo de contrato e churning. Quanto mais curto o contrato, maior a chance de churning.
+
+---
+"""
+
 sns.countplot(x='InternetService', hue='Churn', data=df)
+
+"""## Interpretação do gráfico acima
+
+O gráfico nos motra que a grande maioria do churning acontece a partir de pessoas que utilizam internet via Fibra Ótica.
+---
+"""
 
 sns.countplot(x='Partner', hue='Churn', data=df)
 
-"""### Pergunta para Reflexão
+"""## Interpretação do gráfico acima
+
+O gráfico acima nos mostra uma correlação fraca mas existente, onde clientes não parceiros tem uma tendencia um pouco maior a dar churning.
+
+---
+
+### Pergunta para Reflexão
 - Em qual categoria de contrato (mensal, um ano, dois anos) a barra de 'Churn: Yes' é proporcionalmente maior? O que isso nos diz sobre o comportamento do cliente?
 
 **Resp.:** Na categoria mensal (Month-to-month). Isso nos diz que, clientes assinantes do plano mensal são mais propícios a cancelarem o plano. Acreditamos que essa estatíscias esteja "invertida", nossa interpretação é que, clientes que pretendem cancelar, optam pelo plano mensal para gastarem o mínimo possível.
@@ -79,11 +104,126 @@ sns.countplot(x='Partner', hue='Churn', data=df)
 
 sns.boxplot(x='Churn', y='tenure', data=df)
 
+"""## Interpretação do gráfico acima
+
+O gráfico acima nos mostra que clientes mais longos, ou seja, clientes que são assinantes a mais tempo, tem uma chance bem menor de dar churn.
+
+---
+"""
+
 sns.boxplot(x='Churn', y='MonthlyCharges', data=df)
 
-"""### Pergunta para Reflexão
+"""## Interpretação do gráfico acima
+
+O gráfico acima nos mostra a mesma coisa que um dos gráficos anteriores, que clientes com planos de pagamento mensal tem maior tendencia a se tornarem clientes churn.
+
+---
+
+# Gráficos Extras
+"""
+
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
+
+fig, axes = plt.subplots(3, 3, figsize=(18, 14))
+axes = axes.flatten()
+
+df.groupby("gender")["Churn"].value_counts(normalize=True).unstack().plot(kind="bar", ax=axes[0])
+axes[0].set_title("Churn por Gênero")
+
+df.groupby("SeniorCitizen")["Churn"].value_counts(normalize=True).unstack().plot(kind="bar", ax=axes[1])
+axes[1].set_title("Churn por Idoso (SeniorCitizen)")
+
+df.groupby("Partner")["Churn"].value_counts(normalize=True).unstack().plot(kind="bar", ax=axes[2])
+axes[2].set_title("Churn por Ter Parceiro(a)")
+
+df.groupby("Dependents")["Churn"].value_counts(normalize=True).unstack().plot(kind="bar", ax=axes[3])
+axes[3].set_title("Churn por Dependentes")
+
+df.groupby("Contract")["Churn"].value_counts(normalize=True).unstack().plot(kind="bar", ax=axes[4])
+axes[4].set_title("Churn por Tipo de Contrato")
+
+df.groupby("PaymentMethod")["Churn"].value_counts(normalize=True).unstack().plot(kind="bar", ax=axes[5])
+axes[5].set_title("Churn por Método de Pagamento")
+axes[5].tick_params(axis="x", rotation=45)
+
+df.boxplot(column="tenure", by="Churn", ax=axes[6])
+axes[6].set_title("Tempo de Contrato por Churn")
+axes[6].set_ylabel("Meses")
+axes[6].get_figure().suptitle("")
+
+df.boxplot(column="MonthlyCharges", by="Churn", ax=axes[7])
+axes[7].set_title("Cobrança Mensal por Churn")
+axes[7].set_ylabel("Valor Mensal ($)")
+axes[7].get_figure().suptitle("")
+
+df.boxplot(column="TotalCharges", by="Churn", ax=axes[8])
+axes[8].set_title("Cobrança Total por Churn")
+axes[8].set_ylabel("Valor Total ($)")
+axes[8].get_figure().suptitle("")
+
+plt.tight_layout()
+plt.show()
+
+"""## Interpretação do gráfico acima
+
+O gráfico acima é uma junção de gráficos para todas as nossas variáveis. Ele nos traz várias informações interessantes que serão usadas na nossa conclusão.
+
+---
+
+# Heatmap Extra
+"""
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+df2 = df.copy()
+
+df2["Churn_num"] = df2["Churn"].map({"No": 0, "Yes": 1})
+
+cols_insights = [
+    "gender", "SeniorCitizen", "Partner", "Dependents",
+    "Contract", "PaymentMethod", "tenure", "MonthlyCharges", "TotalCharges"
+]
+
+df_dummies = pd.get_dummies(df2[cols_insights], drop_first=True)
+
+df_dummies["Churn"] = df2["Churn_num"]
+
+corr = df_dummies.corr()
+
+churn_corr = corr[["Churn"]].sort_values(by="Churn", ascending=False)
+
+plt.figure(figsize=(6,10))
+sns.heatmap(churn_corr, annot=True, cmap="coolwarm", fmt=".2f", cbar=False)
+plt.title("Correlação das variáveis com Churn")
+plt.show()
+
+"""## Interpretação do gráfico acima
+
+O gráfico acima nos traz o índice de correlação todas as nossas variáveis com a variável alvo churn. Ele nos traz várias informações interessantes que serão usadas na nossa conclusão.
+
+---
+
+### Pergunta para Reflexão
 
 - Clientes que cancelam ( Churn: Yes ) tendem a ter um tempo de contrato ( tenure ) maior ou menor? E suas cobranças mensais, são mais altas ou mais baixas? O que as medianas nos boxplots revelam?
 
 **Resp.:** Clientes que cancelam tendem a ter um tempo de contrato menor e também tendem a ter cobranças mensais mais altas. As medianas revelam essas duas tendências mencionadas.
+
+---
+
+# Conclusão
+
+- Com base nesta análise, quais são as 3 a 5 variáveis mais promissoras que você escolheria para treinar um modelo? Justifique sua escolha com base nos gráficos
+
+**Resp.:**
+- PaymentMethod_EletronicCheck: O heatmap nos mostra que essa variável, que indica pagamentos automáticos, tem uma forte correlação positiva com Churn.
+- MonthlyCharges: Como já respondido antes, os gráficos nos mostraram uma relação extramente forte entre pagamentos mensais e churn.
+- SeniorCitizen: O heatmap nos mostra uma correlação fraca porém positiva entre a idade do cliente e o Churn.
+- Contract_TwoYear: O contrário do MonthlyCharge, contratos longos, como os de dois anos indicados por essa variável, tendem a trazer clientes mais fiéis.
+- Tenure: Essa é uma das variáveis mais importantes para a nossa análise, pois traz uma correlação extremamente clara, ela nos diz que, quanto maior o prazo que um cliente é assinante, menor a chance dele deixar de ser.
 """
